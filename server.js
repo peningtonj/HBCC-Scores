@@ -6,6 +6,11 @@ const app = express();
 app.use(cors());
 app.use(express.static('.')); // Serve HTML files
 
+// Health check endpoint for Render or other PaaS
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', uptime: process.uptime(), timestamp: Date.now() });
+});
+
 // Helper: parse response JSON or extract window.Dto from HTML fallback
 async function parseBody(response) {
   // read text once to avoid `body used already` errors
@@ -231,6 +236,7 @@ app.get('/api/matches', async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log('Server running at http://localhost:3000');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT} (PORT=${PORT})`);
 });
