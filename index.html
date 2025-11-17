@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HBCC Matches</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      color: white;
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 2.5em;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .filters {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .filter-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 25px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    
+    .filter-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .filter-btn.active {
+      background: white;
+      color: #667eea;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    
+    .stat-card {
+      background: rgba(255,255,255,0.95);
+      padding: 20px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
+    
+    .stat-number {
+      font-size: 2.5em;
+      font-weight: bold;
+      color: #667eea;
+    }
+    
+    .stat-label {
+      color: #666;
+      margin-top: 5px;
+      font-size: 0.9em;
+    }
+    
+    .matches {
+      display: grid;
+      gap: 20px;
+    }
+    
+    .match-card {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+    
+    .match-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .round-badge {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      font-weight: 600;
+    }
+    
+    .status-badge {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      font-weight: 600;
+    }
+    
+    .status-completed {
+      background: #10b981;
+      color: white;
+    }
+    
+    .status-upcoming {
+      background: #3b82f6;
+      color: white;
+    }
+    
+    .status-abandoned {
+      background: #ef4444;
+      color: white;
+    }
+    
+    .teams {
+      display: grid;
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .team {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px;
+      background: #f9fafb;
+      border-radius: 10px;
+      border-left: 4px solid transparent;
+    }
+    
+    .team.winner {
+      border-left-color: #10b981;
+      background: #f0fdf4;
+    }
+    
+    .team-logo {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    
+    .team-info {
+      flex: 1;
+    }
+    
+    .team-name {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 4px;
+    }
+    
+    .team-score {
+      font-size: 1.8em;
+      font-weight: bold;
+      color: #667eea;
+    }
+    
+    .match-result {
+      background: #f0f9ff;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 600;
+      color: #0369a1;
+      margin-top: 15px;
+    }
+    
+    .venue-info {
+      color: #6b7280;
+      font-size: 0.9em;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #e5e7eb;
+    }
+    
+    .loading {
+      text-align: center;
+      color: white;
+      font-size: 1.5em;
+      padding: 50px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏏 HBCC Matches</h1>
+    
+    
+    <div class="stats" id="stats"></div>
+    <div class="matches" id="matches"></div>
+    <div class="loading" id="loading">Loading matches...</div>
+  </div>
+
+  <script>
+    let allMatches = [];
+
+    // Organisation/season for teams endpoint
+    const organisationId = 'ee67af47-8ad8-eb11-a7ad-2818780da0cc';
+    const seasonId = 'a826b403-b813-4318-9805-5bbe4cf7f238';
+
+    async function init() {
+      try {
+        document.getElementById('loading').textContent = 'Loading teams...';
+        const teamsUrl = `https://grassrootsapiproxy.cricket.com.au/fixturesladders/organisations/${organisationId}/teams?seasonId=${seasonId}&jsconfig=eccn%3Atrue`;
+        const teamsRes = await fetch(teamsUrl);
+        const teamsData = await teamsRes.json();
+        const teams = Array.isArray(teamsData.teams) ? teamsData.teams : [];
+        if (!teams.length) {
+          document.getElementById('loading').textContent = 'No teams found';
+          return;
+        }
+
+        // Build grade/team pairs from the teams list
+        const pairs = teams.map(t => {
+          const gradeId = (t.grade && t.grade.id) || (Array.isArray(t.grades) && t.grades[0] && t.grades[0].id) || null;
+          const gradeName = (t.grade && t.grade.name) || (Array.isArray(t.grades) && t.grades[0] && t.grades[0].name) || null;
+          return gradeId && t.id ? { gradeId, teamId: t.id, gradeName } : null;
+        }).filter(Boolean);
+
+        if (!pairs.length) {
+          document.getElementById('loading').textContent = 'No grade/team pairs found';
+          return;
+        }
+
+        document.getElementById('loading').textContent = 'Loading matches...';
+
+        // Fetch latest match for each pair from our server
+        const matchPromises = pairs.map(async ({ gradeId, teamId, gradeName }) => {
+          try {
+            const url = `/api/matches?gradeId=${gradeId}&teamId=${teamId}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            return data.matches.length ? { ...data.matches[0], gradeId, teamId, gradeName } : null;
+          } catch (e) {
+            console.error('Error fetching match for', gradeId, teamId, e);
+            return null;
+          }
+        });
+
+        const results = (await Promise.all(matchPromises)).filter(Boolean);
+
+        // Helper: get best datetime for a match
+        function getMatchTime(m) {
+          const tryList = [
+            m.startDateTime,
+            (m.matchSchedule && m.matchSchedule[0] && m.matchSchedule[0].startDateTime),
+            (m.detail && m.detail.matchSchedule && m.detail.matchSchedule[0] && m.detail.matchSchedule[0].startDateTime),
+            (m.detail && m.detail.innings && m.detail.innings[0] && m.detail.innings[0].startDateTime)
+          ];
+          for (const v of tryList) {
+            if (v) return Date.parse(v);
+          }
+          return 0;
+        }
+
+        // Sort by most recent first
+        results.sort((a, b) => getMatchTime(b) - getMatchTime(a));
+
+        document.getElementById('loading').style.display = 'none';
+        renderRecentMatches(results);
+      } catch (err) {
+        document.getElementById('loading').textContent = 'Error loading matches';
+        console.error(err);
+      }
+    }
+
+    function renderRecentMatches(matches) {
+      if (!matches.length) {
+        document.getElementById('matches').innerHTML = '<div>No recent completed matches found.</div>';
+        return;
+      }
+      const html = matches.map(match => {
+        const cp = match.currentPlayers || {};
+        const strikerDisplay = cp.strikerName ? `${cp.strikerName}${cp.strikerRuns != null ? ' ' + cp.strikerRuns + ' (' + (cp.strikerBalls != null ? cp.strikerBalls : '-') + ')' : ''}` : '-';
+        const nonStrikerDisplay = cp.nonStrikerName ? `${cp.nonStrikerName}${cp.nonStrikerRuns != null ? ' ' + cp.nonStrikerRuns + ' (' + (cp.nonStrikerBalls != null ? cp.nonStrikerBalls : '-') + ')' : ''}` : '-';
+        let bowlerDisplay = '-';
+        if (cp.bowlerName) {
+          const overs = cp.bowlerOvers != null ? cp.bowlerOvers : '-';
+          const maidens = cp.bowlerMaidens != null ? cp.bowlerMaidens : '0';
+          const runs = cp.bowlerRunsConceded != null ? cp.bowlerRunsConceded : '-';
+          const wickets = cp.bowlerWickets != null ? cp.bowlerWickets : '-';
+          bowlerDisplay = `${cp.bowlerName} ${overs}-${maidens}-${runs}-${wickets}`;
+        }
+
+        // prefer grade name from season teams lookup
+        const compName = match.gradeName || (match.detail && (match.detail.competition && match.detail.competition.name)) || (match.detail && match.detail.competitionName) || (match.competition && match.competition.name) || (match.grade && match.grade.name) || '';
+
+        // link to full scoreboard
+        const matchUrl = `https://play.cricket.com.au/match/${match.id}?tab=scorecard`;
+
+        return `
+        <a href="${matchUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit;">
+          <div class="match-card">
+            <div class="match-header">
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <span class="round-badge">${match.round ? match.round.name : ''}</span>
+                <div style="color:#6b7280;font-size:0.9em;">${compName ? `Competition: ${compName}` : ''}</div>
+              </div>
+              <span class="status-badge status-${match.status.toLowerCase()}">${match.status}</span>
+            </div>
+
+            <!-- current players (batters & bowler) -->
+            <div class="current-players" style="margin-bottom:12px;color:#374151;font-weight:600;">
+              <div>Batters: <span class="batter" data-player-id="${cp.strikerId || ''}">${strikerDisplay}</span>, <span class="non-batter" data-player-id="${cp.nonStrikerId || ''}">${nonStrikerDisplay}</span></div>
+              <div>Bowler: <span class="bowler" data-player-id="${cp.bowlerId || ''}">${bowlerDisplay}</span></div>
+            </div>
+
+            <div class="teams">
+              ${match.teams.map(team => `
+                <div class="team ${team.isWinner ? 'winner' : ''}">
+                  <img src="${team.owningOrganisation.logoUrl}" class="team-logo" onerror="this.style.display='none'">
+                  <div class="team-info">
+                    <div class="team-name">${team.displayName}</div>
+                  </div>
+                  <div class="team-score">${team.scoreText || '-'}</div>
+                </div>
+              `).join('')}
+            </div>
+
+            <div class="match-result">${match.resultText}</div>
+
+            <div class="venue-info">
+              📍 ${match.venue.name}, ${match.venue.suburb}
+            </div>
+          </div>
+        </a>
+      `;
+      }).join('');
+      document.getElementById('matches').innerHTML = html;
+    }
+
+    init();
+  </script>
+</body>
+</html>
