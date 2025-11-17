@@ -1,10 +1,22 @@
 const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.static('.')); // Serve HTML files
+
+// Serve index.html explicitly at root (and as a fallback for non-API routes)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Fallback for SPA routes (don't interfere with API or health routes)
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path === '/health') return next();
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // Health check endpoint for Render or other PaaS
 app.get('/health', (req, res) => {
