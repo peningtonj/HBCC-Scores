@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HBCC Matches</title>
+  <title>Play Cricket Matches</title>
   <style>
     * {
       margin: 0;
@@ -90,7 +90,6 @@
     .matches {
       display: grid;
       gap: 20px;
-      /* responsive columns: 1 column on small, 2 on tablet, 3 on wide */
       grid-template-columns: 1fr;
     }
 
@@ -147,6 +146,17 @@
     .status-abandoned {
       background: #ef4444;
       color: white;
+    }
+    
+    .status-live {
+      background: #f59e0b;
+      color: white;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
     }
     
     .teams {
@@ -221,8 +231,7 @@
 </head>
 <body>
   <div class="container">
-    <h1><img src="hbcc.avif" alt="HBCC logo" style="width:48px;height:48px;vertical-align:middle;margin-right:12px;border-radius:6px;">HBCC Matches</h1>
-    
+    <h1 id="title"></h1>
     
     <div class="stats" id="stats"></div>
     <div class="matches" id="matches"></div>
@@ -231,12 +240,160 @@
 
   <script>
     let allMatches = [];
+    let refreshInterval = null;
 
-    // Organisation/season for teams endpoint
-    const organisationId = 'ee67af47-8ad8-eb11-a7ad-2818780da0cc';
-    const seasonId = 'a826b403-b813-4318-9805-5bbe4cf7f238';
+    // Config will be loaded from /config endpoint
+    let organisationId = null;
+    let seasonId = null;
+    let clubName = 'HBCC';
+    let logoPath = 'hbcc.avif';
+
+    async function loadConfig() {
+      try {
+        console.log('Loading /config for overrides...');
+        const res = await fetch('/config', {cache: 'no-store'});
+        const cfg = await res.json();
+        organisationId = cfg.organisationId || organisationId;
+        seasonId = cfg.seasonId || seasonId;
+        clubName = cfg.clubName || clubName;
+        logoPath = cfg.logoPath || logoPath;
+        console.log('Config loaded:', { organisationId, seasonId, clubName, logoPath });
+      } catch (e) {
+        console.warn('Could not load /config, using defaults', e);
+      }
+    }
+
+    function renderTitle() {
+      const titleEl = document.getElementById('title');
+      const img = document.createElement('img');
+      img.id = 'club-logo';
+      img.src = logoPath;
+      img.alt = 'club logo';
+      img.style.cssText = 'width:48px;height:48px;vertical-align:middle;margin-right:12px;border-radius:6px;';
+      
+      titleEl.innerHTML = '';
+      titleEl.appendChild(img);
+      titleEl.appendChild(document.createTextNode(clubName + ' Matches'));
+    }
+
+    function hasLiveMatch(matches) {
+      // A match is considered "live" if it has status === 'LIVE'
+      return matches.some(m => m.status === 'LIVE');
+    }
+
+    function isMatchActuallyLive(match) {
+      // A match marked as LIVE should have recent activity
+      // If no balls bowled in the last 4 hours, it's likely stale
+      const STALE_THRESHOLD_MS = 4 * 60 * 60 * 1000; // 4 hours
+      
+      // Try to find the most recent ball time from currentPlayers or innings data
+      const cp = match.currentPlayers || {};
+      const lastBallTime = cp.lastBallTime || 
+                          (match.detail && match.detail.lastBallTime) ||
+                          (match.lastUpdated);
+
+      console.log(`Checking if match ${match.id} is actually live. Last ball time: ${lastBallTime}`);
+      
+      if (lastBallTime) {
+        const timeSinceLastBall = Date.now() - Date.parse(lastBallTime);
+        if (timeSinceLastBall > STALE_THRESHOLD_MS) {
+          console.log(`Match ${match.id} marked as LIVE but no activity for ${Math.round(timeSinceLastBall / 3600000)} hours - likely stale`);
+          return false;
+        }
+      }
+      
+      return true;
+    }
+
+    function startAutoRefresh(livePairs) {
+      console.log(`Starting auto-refresh for ${livePairs.length} live match(es)...`);
+      
+      // If no live matches, don't start interval
+      if (livePairs.length === 0) {
+        console.log('No live matches, auto-refresh not needed');
+        return;
+      }
+      
+      // Clear any existing interval
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+
+      // Check for live matches and refresh them
+      const checkAndRefresh = async () => {
+        try {
+          console.log(`Auto-refresh: refreshing ${livePairs.length} live match(es)...`);
+          
+          // Fetch only the live matches
+          const matchPromises = livePairs.map(async ({ gradeId, teamId, gradeName }) => {
+            try {
+              const url = `/api/matches?gradeId=${gradeId}&teamId=${teamId}`;
+              const res = await fetch(url);
+              const data = await res.json();
+              return data.matches.length ? { ...data.matches[0], gradeId, teamId, gradeName } : null;
+            } catch (e) {
+              console.error('Error fetching match for', gradeId, teamId, e);
+              return null;
+            }
+          });
+
+          const refreshedMatches = (await Promise.all(matchPromises)).filter(Boolean);
+          
+          // Update only the refreshed matches in allMatches
+          refreshedMatches.forEach(refreshed => {
+            const idx = allMatches.findIndex(m => m.id === refreshed.id);
+            if (idx !== -1) {
+              allMatches[idx] = refreshed;
+            }
+          });
+
+          // Helper: get best datetime for a match
+          function getMatchTime(m) {
+            const tryList = [
+              m.startDateTime,
+              (m.matchSchedule && m.matchSchedule[0] && m.matchSchedule[0].startDateTime),
+              (m.detail && m.detail.matchSchedule && m.detail.matchSchedule[0] && m.detail.matchSchedule[0].startDateTime),
+              (m.detail && m.detail.innings && m.detail.innings[0] && m.detail.innings[0].startDateTime)
+            ];
+            for (const v of tryList) {
+              if (v) return Date.parse(v);
+            }
+            return 0;
+          }
+
+          // Sort by most recent first
+          allMatches.sort((a, b) => getMatchTime(b) - getMatchTime(a));
+
+          renderRecentMatches(allMatches);
+
+          // Check if any matches are still actually live (not stale), if not stop refreshing
+          const activeLiveMatches = allMatches.filter(m => m.status === 'LIVE' && isMatchActuallyLive(m));
+          if (activeLiveMatches.length === 0) {
+            console.log('No active live matches detected, stopping auto-refresh');
+            if (refreshInterval) {
+              clearInterval(refreshInterval);
+              refreshInterval = null;
+            }
+          }
+        } catch (err) {
+          console.error('Error during auto-refresh:', err);
+        }
+      };
+
+      // Run initial check
+      checkAndRefresh();
+
+      // Set up interval to check every 30 seconds
+      refreshInterval = setInterval(checkAndRefresh, 30000);
+    }
 
     async function init() {
+      // Load config first
+      await loadConfig();
+      
+      // Now render title with loaded config values
+      renderTitle();
+      
       try {
         document.getElementById('loading').textContent = 'Loading teams...';
         const teamsUrl = `https://grassrootsapiproxy.cricket.com.au/fixturesladders/organisations/${organisationId}/teams?seasonId=${seasonId}&jsconfig=eccn%3Atrue`;
@@ -295,7 +452,15 @@
         results.sort((a, b) => getMatchTime(b) - getMatchTime(a));
 
         document.getElementById('loading').style.display = 'none';
+        allMatches = results;
         renderRecentMatches(results);
+        
+        // Determine which matches are live AND actually active (not stale)
+        const livePairs = results
+          .filter(m => m.status === 'LIVE' && isMatchActuallyLive(m))
+          .map(m => ({ gradeId: m.gradeId, teamId: m.teamId, gradeName: m.gradeName }));
+        
+        startAutoRefresh(livePairs);
       } catch (err) {
         document.getElementById('loading').textContent = 'Error loading matches';
         console.error(err);
@@ -350,7 +515,7 @@
                   <div class="team-info">
                     <div class="team-name">${team.displayName}</div>
                   </div>
-                  <div class="team-score">${team.scoreText || '-'}</div>
+                  <div class="team-score">${(team.scoreText || "-" ) + (team.oversBowled ? " (" + team.oversBowled + ")" : "") || '-'}</div>
                 </div>
               `).join('')}
             </div>

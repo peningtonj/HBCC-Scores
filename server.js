@@ -14,13 +14,72 @@ app.get('/', (req, res) => {
 
 // Fallback for SPA routes (don't interfere with API or health routes)
 app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api') || req.path === '/health') return next();
+  if (req.path.startsWith('/api') || req.path === '/health' || req.path === '/config') return next();
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Health check endpoint for Render or other PaaS
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime(), timestamp: Date.now() });
+});
+
+// Config endpoint: return configuration from environment variables if set,
+// otherwise fall back to config.json (if present). This makes per-deployment
+// configuration easy (set env vars in Render or other PaaS).
+app.get('/config', (req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+
+  console.log('[CONFIG] CLUB_CONFIG env var:', process.env.CLUB_CONFIG);
+  // 1) If CLUB_CONFIG points to a file, try to read it first
+  const clubConfigPath = process.env.CLUB_CONFIG || null;
+  let cfg = {
+    organisationId: null,
+    seasonId: null,
+    clubName: null,
+    logoPath: null
+  };
+
+  if (clubConfigPath) {
+    try {
+      const resolved = path.isAbsolute(clubConfigPath) ? clubConfigPath : path.join(__dirname, clubConfigPath);
+      console.log('[CONFIG] Attempting to read from CLUB_CONFIG path:', resolved);
+      if (fs.existsSync(resolved)) {
+        const raw = fs.readFileSync(resolved, 'utf8');
+        const fileCfg = JSON.parse(raw);
+        cfg = Object.assign(cfg, fileCfg);
+        console.log('[CONFIG] Successfully loaded from CLUB_CONFIG:', cfg);
+      } else {
+        console.warn('[CONFIG] CLUB_CONFIG file not found at', resolved);
+      }
+    } catch (e) {
+      console.warn('[CONFIG] Failed to read CLUB_CONFIG file:', e.message || e);
+    }
+  } else {
+    console.log('[CONFIG] CLUB_CONFIG env var not set, skipping file load');
+  }
+
+  // 3) Fallback to config.json in repo if still missing
+  const fallbackPath = path.join(__dirname, 'config.json');
+  if ((!cfg.organisationId || !cfg.seasonId || !cfg.clubName || !cfg.logoPath) && fs.existsSync(fallbackPath)) {
+    try {
+      console.log('[CONFIG] Attempting fallback to config.json at:', fallbackPath);
+      const raw = fs.readFileSync(fallbackPath, 'utf8');
+      const fileCfg = JSON.parse(raw);
+      cfg.organisationId = cfg.organisationId || fileCfg.organisationId;
+      cfg.seasonId = cfg.seasonId || fileCfg.seasonId;
+      cfg.clubName = cfg.clubName || fileCfg.clubName;
+      cfg.logoPath = cfg.logoPath || fileCfg.logoPath;
+      console.log('[CONFIG] Successfully loaded fallback config:', cfg);
+    } catch (e) {
+      console.warn('[CONFIG] Could not read fallback config.json:', e.message || e);
+    }
+  } else if (cfg.organisationId && cfg.seasonId && cfg.clubName && cfg.logoPath) {
+    console.log('[CONFIG] Config complete, skipping fallback check');
+  }
+
+  console.log('[CONFIG] Final config response:', cfg);
+  res.json(cfg);
 });
 
 // Helper: parse response JSON or extract window.Dto from HTML fallback
@@ -83,6 +142,7 @@ app.get('/api/matches', async (req, res) => {
           detailData = detailData.match;
         }
         chosen.detail = detailData;
+
       } catch (e) {
         console.warn('Could not fetch match detail:', e.message || e);
         chosen.detail = null;
@@ -150,17 +210,30 @@ app.get('/api/matches', async (req, res) => {
         console.warn('Could not fetch balls or parse them:', e.message || e);
       }
 
-      // 7) Attach the last ball
+      // 7) Extract oversBowled for each team from innings
+      if (chosen.detail && Array.isArray(chosen.detail.innings)) {
+        chosen.teams.forEach(team => {
+          const teamInnings = chosen.detail.innings.find(inn => inn.battingTeamId === team.id);
+          if (teamInnings) {
+            team.oversBowled = teamInnings.oversBowled || "0.0";
+          } else {
+            team.oversBowled = "0.0";
+          }
+        });
+      }
+
+      // 8) Attach the last ball
       if (lastBall) {
         chosen.lastBall = lastBall;
-        // 8) Put the currently participating players under currentPlayers
+        // 9) Put the currently participating players under currentPlayers
         chosen.currentPlayers = {
           strikerId: lastBall.strikerParticipantId || null,
           strikerName: lastBall.strikerShortName || lastBall.striker || null,
           nonStrikerId: lastBall.nonStrikerParticipantId || null,
           nonStrikerName: lastBall.nonStrikerShortName || lastBall.nonStriker || null,
           bowlerId: lastBall.bowlerParticipantId || null,
-          bowlerName: lastBall.bowlerShortName || lastBall.bowler || null
+          bowlerName: lastBall.bowlerShortName || lastBall.bowler || null,
+          lastBallTime: lastBall.ballTime || null
         };
 
         // Add batting stats for striker/non-striker from the detailed scorecard if available
