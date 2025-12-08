@@ -276,6 +276,23 @@
       titleEl.appendChild(document.createTextNode(clubName + ' Matches'));
     }
 
+     // Helper: get best datetime for a match
+          function getMatchTime(m) {
+            const tryList = [
+              m.startDateTime,
+              (m.matchSchedule && m.matchSchedule[0] && m.matchSchedule[0].startDateTime),
+              (m.detail && m.detail.matchSchedule && m.detail.matchSchedule[0] && m.detail.matchSchedule[0].startDateTime),
+              (m.detail && m.detail.innings && m.detail.innings[0] && m.detail.innings[0].startDateTime)
+            ];
+            console.log(m.teams[0].displayName);
+            console.log('getMatchTime tryList:', tryList);
+            for (const v of tryList) {
+              if (v) return Date.parse(v);
+            }
+            return 0;
+          }
+
+
     function hasLiveMatch(matches) {
       // A match is considered "live" if it has status === 'LIVE'
       return matches.some(m => m.status === 'LIVE');
@@ -347,20 +364,7 @@
             }
           });
 
-          // Helper: get best datetime for a match
-          function getMatchTime(m) {
-            const tryList = [
-              m.startDateTime,
-              (m.matchSchedule && m.matchSchedule[0] && m.matchSchedule[0].startDateTime),
-              (m.detail && m.detail.matchSchedule && m.detail.matchSchedule[0] && m.detail.matchSchedule[0].startDateTime),
-              (m.detail && m.detail.innings && m.detail.innings[0] && m.detail.innings[0].startDateTime)
-            ];
-            for (const v of tryList) {
-              if (v) return Date.parse(v);
-            }
-            return 0;
-          }
-
+         
           // Sort by most recent first
           allMatches.sort((a, b) => getMatchTime(b) - getMatchTime(a));
 
@@ -438,7 +442,7 @@
         function getMatchTime(m) {
           const tryList = [
             m.startDateTime,
-            (m.matchSchedule && m.matchSchedule[0] && m.matchSchedule[0].startDateTime),
+            (m.matchSchedule && m.matchSchedule[-1] && m.matchSchedule[-1].startDateTime),
             (m.detail && m.detail.matchSchedule && m.detail.matchSchedule[0] && m.detail.matchSchedule[0].startDateTime),
             (m.detail && m.detail.innings && m.detail.innings[0] && m.detail.innings[0].startDateTime)
           ];
@@ -498,6 +502,7 @@
               <div style="display:flex;flex-direction:column;gap:6px;">
                 <span class="round-badge">${match.round ? match.round.name : ''}</span>
                 <div style="color:#6b7280;font-size:0.9em;">${compName ? `Competition: ${compName}` : ''}</div>
+                <div style="color:#6b7280;font-size:0.9em;">${new Date(getMatchTime(match))}</div>
               </div>
               <span class="status-badge status-${match.status.toLowerCase()}">${match.status}</span>
             </div>
