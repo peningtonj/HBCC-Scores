@@ -5,24 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Play Cricket Matches</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #13213C;
       min-height: 100vh;
       padding: 20px;
     }
-    
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    
+    .container { max-width: 1200px; margin: 0 auto; }
     h1 {
       color: white;
       text-align: center;
@@ -30,84 +20,29 @@
       font-size: 2.5em;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
     }
-    
-    .filters {
-      display: flex;
-      gap: 15px;
-      margin-bottom: 25px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    
-    .filter-btn {
-      padding: 12px 24px;
-      border: none;
-      border-radius: 25px;
-      background: rgba(255,255,255,0.2);
-      color: white;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: 600;
-      transition: all 0.3s;
-    }
-    
-    .filter-btn:hover {
-      background: rgba(255,255,255,0.3);
-    }
-    
-    .filter-btn.active {
-      background: white;
-      color: #667eea;
-    }
-    
     .stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 15px;
       margin-bottom: 30px;
     }
-    
-    .stat-card {
-      background: rgba(255,255,255,0.95);
-      padding: 20px;
-      border-radius: 15px;
-      text-align: center;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    }
-    
-    .stat-number {
-      font-size: 2.5em;
-      font-weight: bold;
-      color: #667eea;
-    }
-    
-    .stat-label {
-      color: #666;
-      margin-top: 5px;
-      font-size: 0.9em;
-    }
-    
     .matches {
       display: grid;
       gap: 20px;
       grid-template-columns: 1fr;
     }
-
     @media (min-width: 700px) {
       .matches { grid-template-columns: repeat(2, 1fr); }
     }
-
     @media (min-width: 1100px) {
       .matches { grid-template-columns: repeat(3, 1fr); }
     }
-    
     .match-card {
       background: white;
       border-radius: 15px;
       padding: 25px;
       box-shadow: 0 10px 40px rgba(0,0,0,0.1);
     }
-    
     .match-header {
       display: flex;
       justify-content: space-between;
@@ -116,7 +51,6 @@
       flex-wrap: wrap;
       gap: 10px;
     }
-    
     .round-badge {
       background: linear-gradient(135deg, #667eea, #764ba2);
       color: white;
@@ -125,46 +59,25 @@
       font-size: 0.9em;
       font-weight: 600;
     }
-    
     .status-badge {
       padding: 6px 16px;
       border-radius: 20px;
       font-size: 0.85em;
       font-weight: 600;
     }
-    
-    .status-completed {
-      background: #10b981;
-      color: white;
-    }
-    
-    .status-upcoming {
-      background: #3b82f6;
-      color: white;
-    }
-    
-    .status-abandoned {
-      background: #ef4444;
-      color: white;
-    }
-    
+    .status-completed { background: #10b981; color: white; }
+    .status-upcoming { background: #3b82f6; color: white; }
+    .status-abandoned { background: #ef4444; color: white; }
     .status-live {
       background: #f59e0b;
       color: white;
       animation: pulse 2s ease-in-out infinite;
     }
-
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.7; }
     }
-    
-    .teams {
-      display: grid;
-      gap: 15px;
-      margin: 20px 0;
-    }
-    
+    .teams { display: grid; gap: 15px; margin: 20px 0; }
     .team {
       display: flex;
       align-items: center;
@@ -174,35 +87,23 @@
       border-radius: 10px;
       border-left: 4px solid transparent;
     }
-    
     .team.winner {
       border-left-color: #10b981;
       background: #f0fdf4;
     }
-    
     .team-logo {
       width: 50px;
       height: 50px;
       border-radius: 50%;
       object-fit: cover;
     }
-    
-    .team-info {
-      flex: 1;
-    }
-    
-    .team-name {
-      font-weight: 600;
-      color: #1f2937;
-      margin-bottom: 4px;
-    }
-    
+    .team-info { flex: 1; }
+    .team-name { font-weight: 600; color: #1f2937; margin-bottom: 4px; }
     .team-score {
       font-size: 1.8em;
       font-weight: bold;
       color: #667eea;
     }
-    
     .match-result {
       background: #f0f9ff;
       padding: 12px;
@@ -212,7 +113,6 @@
       color: #0369a1;
       margin-top: 15px;
     }
-    
     .venue-info {
       color: #6b7280;
       font-size: 0.9em;
@@ -220,7 +120,6 @@
       padding-top: 15px;
       border-top: 1px solid #e5e7eb;
     }
-    
     .loading {
       text-align: center;
       color: white;
@@ -230,314 +129,198 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1 id="title"></h1>
-    
-    <div class="stats" id="stats"></div>
-    <div class="matches" id="matches"></div>
-    <div class="loading" id="loading">Loading matches...</div>
-  </div>
+<div class="container">
+  <h1 id="title"></h1>
+  <div class="stats" id="stats"></div>
+  <div class="matches" id="matches"></div>
+  <div class="loading" id="loading">Loading matches...</div>
+</div>
 
-  <script>
-    let allMatches = [];
-    let refreshInterval = null;
+<script>
+  let allMatches = [];
+  let refreshInterval = null;
 
-    // Config will be loaded from /config endpoint
-    let organisationId = null;
-    let seasonId = null;
-    let clubName = 'HBCC';
-    let logoPath = 'hbcc.avif';
+  let organisationId = null;
+  let seasonId = null;
+  let clubName = 'HBCC';
+  let logoPath = 'hbcc.avif';
 
-    async function loadConfig() {
-      try {
-        console.log('Loading /config for overrides...');
-        const res = await fetch('/config', {cache: 'no-store'});
-        const cfg = await res.json();
-        organisationId = cfg.organisationId || organisationId;
-        seasonId = cfg.seasonId || seasonId;
-        clubName = cfg.clubName || clubName;
-        logoPath = cfg.logoPath || logoPath;
-        console.log('Config loaded:', { organisationId, seasonId, clubName, logoPath });
-      } catch (e) {
-        console.warn('Could not load /config, using defaults', e);
-      }
+  const STATUS_ORDER = {
+    "LIVE": 0,
+    "IN_PROGEESS": 1,
+    "STUMPS": 2
+  };
+
+  function statusRank(status) {
+    return STATUS_ORDER[status] ?? 100; // OTHER
+  }
+
+  function getMatchTime(m) {
+    const tryList = [
+      m.startDateTime,
+      m.matchSchedule?.[0]?.startDateTime,
+      m.detail?.matchSchedule?.[0]?.startDateTime,
+      m.detail?.innings?.[0]?.startDateTime
+    ];
+    for (const v of tryList) {
+      if (v) return Date.parse(v);
     }
+    return 0;
+  }
 
-    function renderTitle() {
-      const titleEl = document.getElementById('title');
-      const img = document.createElement('img');
-      img.id = 'club-logo';
-      img.src = logoPath;
-      img.alt = 'club logo';
-      img.style.cssText = 'width:48px;height:48px;vertical-align:middle;margin-right:12px;border-radius:6px;';
-      
-      titleEl.innerHTML = '';
-      titleEl.appendChild(img);
-      titleEl.appendChild(document.createTextNode(clubName + ' Matches'));
-    }
+  function sortMatches(matches) {
+    matches.sort((a, b) => {
+      const statusDiff = statusRank(a.status) - statusRank(b.status);
+      if (statusDiff !== 0) return statusDiff;
+      return getMatchTime(b) - getMatchTime(a);
+    });
+  }
 
-     // Helper: get best datetime for a match
-          function getMatchTime(m) {
-            const tryList = [
-              m.startDateTime,
-              (m.matchSchedule && m.matchSchedule[0] && m.matchSchedule[0].startDateTime),
-              (m.detail && m.detail.matchSchedule && m.detail.matchSchedule[0] && m.detail.matchSchedule[0].startDateTime),
-              (m.detail && m.detail.innings && m.detail.innings[0] && m.detail.innings[0].startDateTime)
-            ];
-            console.log(m.teams[0].displayName);
-            console.log('getMatchTime tryList:', tryList);
-            for (const v of tryList) {
-              if (v) return Date.parse(v);
-            }
-            return 0;
-          }
+  async function loadConfig() {
+    try {
+      const res = await fetch('/config', { cache: 'no-store' });
+      const cfg = await res.json();
+      organisationId = cfg.organisationId || organisationId;
+      seasonId = cfg.seasonId || seasonId;
+      clubName = cfg.clubName || clubName;
+      logoPath = cfg.logoPath || logoPath;
+    } catch {}
+  }
 
+  function renderTitle() {
+    const titleEl = document.getElementById('title');
+    titleEl.innerHTML = `
+      <img src="${logoPath}" style="width:48px;height:48px;vertical-align:middle;margin-right:12px;border-radius:6px;">
+      ${clubName} Matches
+    `;
+  }
 
-    function hasLiveMatch(matches) {
-      // A match is considered "live" if it has status === 'LIVE'
-      return matches.some(m => m.status === 'LIVE');
-    }
+  function isMatchActuallyLive(match) {
+    const STALE_THRESHOLD_MS = 4 * 60 * 60 * 1000;
+    const lastBallTime =
+      match.currentPlayers?.lastBallTime ||
+      match.detail?.lastBallTime ||
+      match.lastUpdated;
 
-    function isMatchActuallyLive(match) {
-      // A match marked as LIVE should have recent activity
-      // If no balls bowled in the last 4 hours, it's likely stale
-      const STALE_THRESHOLD_MS = 4 * 60 * 60 * 1000; // 4 hours
-      
-      // Try to find the most recent ball time from currentPlayers or innings data
-      const cp = match.currentPlayers || {};
-      const lastBallTime = cp.lastBallTime || 
-                          (match.detail && match.detail.lastBallTime) ||
-                          (match.lastUpdated);
+    if (!lastBallTime) return true;
+    return (Date.now() - Date.parse(lastBallTime)) <= STALE_THRESHOLD_MS;
+  }
 
-      console.log(`Checking if match ${match.id} is actually live. Last ball time: ${lastBallTime}`);
-      
-      if (lastBallTime) {
-        const timeSinceLastBall = Date.now() - Date.parse(lastBallTime);
-        if (timeSinceLastBall > STALE_THRESHOLD_MS) {
-          console.log(`Match ${match.id} marked as LIVE but no activity for ${Math.round(timeSinceLastBall / 3600000)} hours - likely stale`);
-          return false;
-        }
-      }
-      
-      return true;
-    }
+  function startAutoRefresh(livePairs) {
+    if (!livePairs.length) return;
 
-    function startAutoRefresh(livePairs) {
-      console.log(`Starting auto-refresh for ${livePairs.length} live match(es)...`);
-      
-      // If no live matches, don't start interval
-      if (livePairs.length === 0) {
-        console.log('No live matches, auto-refresh not needed');
-        return;
-      }
-      
-      // Clear any existing interval
-      if (refreshInterval) {
+    if (refreshInterval) clearInterval(refreshInterval);
+
+    const checkAndRefresh = async () => {
+      const refreshed = await Promise.all(
+        livePairs.map(async ({ gradeId, teamId, gradeName }) => {
+          const res = await fetch(`/api/matches?gradeId=${gradeId}&teamId=${teamId}`);
+          const data = await res.json();
+          return data.matches.length
+            ? { ...data.matches[0], gradeId, teamId, gradeName }
+            : null;
+        })
+      );
+
+      refreshed.filter(Boolean).forEach(m => {
+        const idx = allMatches.findIndex(x => x.id === m.id);
+        if (idx !== -1) allMatches[idx] = m;
+      });
+
+      sortMatches(allMatches);
+      renderRecentMatches(allMatches);
+
+      if (!allMatches.some(m => m.status === 'LIVE' && isMatchActuallyLive(m))) {
         clearInterval(refreshInterval);
+        refreshInterval = null;
       }
+    };
 
-      // Check for live matches and refresh them
-      const checkAndRefresh = async () => {
-        try {
-          console.log(`Auto-refresh: refreshing ${livePairs.length} live match(es)...`);
-          
-          // Fetch only the live matches
-          const matchPromises = livePairs.map(async ({ gradeId, teamId, gradeName }) => {
-            try {
-              const url = `/api/matches?gradeId=${gradeId}&teamId=${teamId}`;
-              const res = await fetch(url);
-              const data = await res.json();
-              return data.matches.length ? { ...data.matches[0], gradeId, teamId, gradeName } : null;
-            } catch (e) {
-              console.error('Error fetching match for', gradeId, teamId, e);
-              return null;
-            }
-          });
+    checkAndRefresh();
+    refreshInterval = setInterval(checkAndRefresh, 10000);
+  }
 
-          const refreshedMatches = (await Promise.all(matchPromises)).filter(Boolean);
-          
-          // Update only the refreshed matches in allMatches
-          refreshedMatches.forEach(refreshed => {
-            const idx = allMatches.findIndex(m => m.id === refreshed.id);
-            if (idx !== -1) {
-              allMatches[idx] = refreshed;
-            }
-          });
+  async function init() {
+    await loadConfig();
+    renderTitle();
 
-         
-          // Sort by most recent first
-          allMatches.sort((a, b) => getMatchTime(b) - getMatchTime(a));
+    const teamsRes = await fetch(
+      `https://grassrootsapiproxy.cricket.com.au/fixturesladders/organisations/${organisationId}/teams?seasonId=${seasonId}&jsconfig=eccn%3Atrue`
+    );
+    const teamsData = await teamsRes.json();
 
-          renderRecentMatches(allMatches);
+    const pairs = (teamsData.teams || [])
+      .map(t => ({
+        gradeId: t.grade?.id || t.grades?.[0]?.id,
+        teamId: t.id,
+        gradeName: t.grade?.name || t.grades?.[0]?.name
+      }))
+      .filter(p => p.gradeId && p.teamId);
 
-          // Check if any matches are still actually live (not stale), if not stop refreshing
-          const activeLiveMatches = allMatches.filter(m => m.status === 'LIVE' && isMatchActuallyLive(m));
-          if (activeLiveMatches.length === 0) {
-            console.log('No active live matches detected, stopping auto-refresh');
-            if (refreshInterval) {
-              clearInterval(refreshInterval);
-              refreshInterval = null;
-            }
-          }
-        } catch (err) {
-          console.error('Error during auto-refresh:', err);
-        }
-      };
+    const matches = (await Promise.all(
+      pairs.map(async p => {
+        const res = await fetch(`/api/matches?gradeId=${p.gradeId}&teamId=${p.teamId}`);
+        const data = await res.json();
+        return data.matches.length ? { ...data.matches[0], ...p } : null;
+      })
+    )).filter(Boolean);
 
-      // Run initial check
-      checkAndRefresh();
+    sortMatches(matches);
 
-      // Set up interval to check every 10 seconds
-      refreshInterval = setInterval(checkAndRefresh, 10000);
-    }
+    allMatches = matches;
+    document.getElementById('loading').style.display = 'none';
+    renderRecentMatches(matches);
 
-    async function init() {
-      // Load config first
-      await loadConfig();
-      
-      // Now render title with loaded config values
-      renderTitle();
-      
-      try {
-        document.getElementById('loading').textContent = 'Loading teams...';
-        const teamsUrl = `https://grassrootsapiproxy.cricket.com.au/fixturesladders/organisations/${organisationId}/teams?seasonId=${seasonId}&jsconfig=eccn%3Atrue`;
-        const teamsRes = await fetch(teamsUrl);
-        const teamsData = await teamsRes.json();
-        const teams = Array.isArray(teamsData.teams) ? teamsData.teams : [];
-        if (!teams.length) {
-          document.getElementById('loading').textContent = 'No teams found';
-          return;
-        }
+    startAutoRefresh(
+      matches
+        .filter(m => m.status === 'LIVE' && isMatchActuallyLive(m))
+        .map(m => ({ gradeId: m.gradeId, teamId: m.teamId, gradeName: m.gradeName }))
+    );
+  }
 
-        // Build grade/team pairs from the teams list
-        const pairs = teams.map(t => {
-          const gradeId = (t.grade && t.grade.id) || (Array.isArray(t.grades) && t.grades[0] && t.grades[0].id) || null;
-          const gradeName = (t.grade && t.grade.name) || (Array.isArray(t.grades) && t.grades[0] && t.grades[0].name) || null;
-          return gradeId && t.id ? { gradeId, teamId: t.id, gradeName } : null;
-        }).filter(Boolean);
-
-        if (!pairs.length) {
-          document.getElementById('loading').textContent = 'No grade/team pairs found';
-          return;
-        }
-
-        document.getElementById('loading').textContent = 'Loading matches...';
-
-        // Fetch latest match for each pair from our server
-        const matchPromises = pairs.map(async ({ gradeId, teamId, gradeName }) => {
-          try {
-            const url = `/api/matches?gradeId=${gradeId}&teamId=${teamId}`;
-            const res = await fetch(url);
-            const data = await res.json();
-            return data.matches.length ? { ...data.matches[0], gradeId, teamId, gradeName } : null;
-          } catch (e) {
-            console.error('Error fetching match for', gradeId, teamId, e);
-            return null;
-          }
-        });
-
-        const results = (await Promise.all(matchPromises)).filter(Boolean);
-
-        // Helper: get best datetime for a match
-        function getMatchTime(m) {
-          const tryList = [
-            m.startDateTime,
-            (m.matchSchedule && m.matchSchedule[-1] && m.matchSchedule[-1].startDateTime),
-            (m.detail && m.detail.matchSchedule && m.detail.matchSchedule[0] && m.detail.matchSchedule[0].startDateTime),
-            (m.detail && m.detail.innings && m.detail.innings[0] && m.detail.innings[0].startDateTime)
-          ];
-          for (const v of tryList) {
-            if (v) return Date.parse(v);
-          }
-          return 0;
-        }
-
-        // Sort by most recent first
-        results.sort((a, b) => getMatchTime(b) - getMatchTime(a));
-
-        document.getElementById('loading').style.display = 'none';
-        allMatches = results;
-        renderRecentMatches(results);
-        
-        // Determine which matches are live AND actually active (not stale)
-        const livePairs = results
-          .filter(m => m.status === 'LIVE' && isMatchActuallyLive(m))
-          .map(m => ({ gradeId: m.gradeId, teamId: m.teamId, gradeName: m.gradeName }));
-        
-        startAutoRefresh(livePairs);
-      } catch (err) {
-        document.getElementById('loading').textContent = 'Error loading matches';
-        console.error(err);
-      }
-    }
-
-    function renderRecentMatches(matches) {
-      if (!matches.length) {
-        document.getElementById('matches').innerHTML = '<div>No recent completed matches found.</div>';
-        return;
-      }
-      const html = matches.map(match => {
-        const cp = match.currentPlayers || {};
-        const strikerDisplay = cp.strikerName ? `${cp.strikerName}${cp.strikerRuns != null ? ' ' + cp.strikerRuns + ' (' + (cp.strikerBalls != null ? cp.strikerBalls : '-') + ')' : ''}` : '-';
-        const nonStrikerDisplay = cp.nonStrikerName ? `${cp.nonStrikerName}${cp.nonStrikerRuns != null ? ' ' + cp.nonStrikerRuns + ' (' + (cp.nonStrikerBalls != null ? cp.nonStrikerBalls : '-') + ')' : ''}` : '-';
-        let bowlerDisplay = '-';
-        if (cp.bowlerName) {
-          const overs = cp.bowlerOvers != null ? cp.bowlerOvers : '-';
-          const maidens = cp.bowlerMaidens != null ? cp.bowlerMaidens : '0';
-          const runs = cp.bowlerRunsConceded != null ? cp.bowlerRunsConceded : '-';
-          const wickets = cp.bowlerWickets != null ? cp.bowlerWickets : '-';
-          bowlerDisplay = `${cp.bowlerName} ${overs}-${maidens}-${runs}-${wickets}`;
-        }
-
-        // prefer grade name from season teams lookup
-        const compName = match.gradeName || (match.detail && (match.detail.competition && match.detail.competition.name)) || (match.detail && match.detail.competitionName) || (match.competition && match.competition.name) || (match.grade && match.grade.name) || '';
-
-        // link to full scoreboard
-        const matchUrl = `https://play.cricket.com.au/match/${match.id}?tab=scorecard`;
-
-        return `
-        <a href="${matchUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit;">
-          <div class="match-card">
-            <div class="match-header">
-              <div style="display:flex;flex-direction:column;gap:6px;">
-                <span class="round-badge">${match.round ? match.round.name : ''}</span>
-                <div style="color:#6b7280;font-size:0.9em;">${compName ? `Competition: ${compName}` : ''}</div>
-                <div style="color:#6b7280;font-size:0.9em;">${new Date(getMatchTime(match))}</div>
+  function renderRecentMatches(matches) {
+    document.getElementById('matches').innerHTML = matches.map(match => `
+      <a href="https://play.cricket.com.au/match/${match.id}?tab=scorecard"
+         target="_blank" rel="noopener noreferrer"
+         style="text-decoration:none;color:inherit;">
+        <div class="match-card">
+          <div class="match-header">
+            <div>
+              <span class="round-badge">${match.round?.name || ''}</span>
+              <div style="color:#6b7280;font-size:0.9em;">
+                ${new Date(getMatchTime(match)).toLocaleString()}
               </div>
-              <span class="status-badge status-${match.status.toLowerCase()}">${match.status}</span>
             </div>
-
-            <!-- current players (batters & bowler) -->
-            <div class="current-players" style="margin-bottom:12px;color:#374151;font-weight:600;">
-              <div>Batters: <span class="batter" data-player-id="${cp.strikerId || ''}">${strikerDisplay}</span>, <span class="non-batter" data-player-id="${cp.nonStrikerId || ''}">${nonStrikerDisplay}</span></div>
-              <div>Bowler: <span class="bowler" data-player-id="${cp.bowlerId || ''}">${bowlerDisplay}</span></div>
-            </div>
-
-            <div class="teams">
-              ${match.teams.map(team => `
-                <div class="team ${team.isWinner ? 'winner' : ''}">
-                  <img src="${team.owningOrganisation.logoUrl}" class="team-logo" onerror="this.style.display='none'">
-                  <div class="team-info">
-                    <div class="team-name">${team.displayName}</div>
-                  </div>
-                  <div class="team-score">${(team.scoreText || "-" ) + (team.oversBowled ? " (" + team.oversBowled + ")" : "") || '-'}</div>
-                </div>
-              `).join('')}
-            </div>
-
-            <div class="match-result">${match.resultText}</div>
-
-            <div class="venue-info">
-              📍 ${match.venue.name}, ${match.venue.suburb}
-            </div>
+            <span class="status-badge status-${match.status.toLowerCase()}">
+              ${match.status}
+            </span>
           </div>
-        </a>
-      `;
-      }).join('');
-      document.getElementById('matches').innerHTML = html;
-    }
 
-    init();
-  </script>
+          <div class="teams">
+            ${match.teams.map(team => `
+              <div class="team ${team.isWinner ? 'winner' : ''}">
+                <img src="${team.owningOrganisation.logoUrl}" class="team-logo"
+                     onerror="this.style.display='none'">
+                <div class="team-info">
+                  <div class="team-name">${team.displayName}</div>
+                </div>
+                <div class="team-score">
+                  ${(team.scoreText || '-')}${team.oversBowled ? ` (${team.oversBowled})` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="match-result">${match.resultText || ''}</div>
+          <div class="venue-info">
+            📍 ${match.venue?.name || ''}, ${match.venue?.suburb || ''}
+          </div>
+        </div>
+      </a>
+    `).join('');
+  }
+
+  init();
+</script>
 </body>
 </html>
