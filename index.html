@@ -542,9 +542,11 @@
   
             <div class="match-result">${match.resultText}</div>  
   
-            <div class="venue-info">  
-              📍 ${match.venue.name}, ${match.venue.suburb}  
-            </div>  
+            ${match.venue ? `
+              <div class="venue-info">  
+                📍 ${match.venue.name || 'Unknown venue'}${match.venue.suburb ? ', ' + match.venue.suburb : ''}  
+              </div>  
+            ` : ''}
           </div>  
         </a>  
       `;  
